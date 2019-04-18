@@ -18,10 +18,12 @@ function Engine
         $Extension
     )
 
+    # if no extension, use the engine name
     if ([string]::IsNullOrWhiteSpace($Extension)) {
         $Extension = $Engine.ToLowerInvariant()
     }
 
+    # set the view engine details
     $PodeContext.Server.ViewEngine.Engine = $Engine.ToLowerInvariant()
     $PodeContext.Server.ViewEngine.Extension = $Extension
     $PodeContext.Server.ViewEngine.Script = $ScriptBlock

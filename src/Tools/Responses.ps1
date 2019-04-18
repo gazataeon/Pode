@@ -420,6 +420,59 @@ function Html
     Write-PodeValueToResponse -Value $Value -ContentType 'text/html; charset=utf-8'
 }
 
+function Markdown
+{
+    param (
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNull()]
+        $Value,
+
+        [switch]
+        $File,
+
+        [switch]
+        [Alias('html')]
+        $AsHtml
+    )
+
+    if ($File) {
+        # test the file path, and set status accordingly
+        if (!(Test-PodePath $Value)) {
+            return
+        }
+        else {
+            $Value = Get-PodeFileContent -Path $Value
+        }
+    }
+    elseif (Test-Empty $value) {
+        $Value = [string]::Empty
+    }
+
+    $mimeType = 'text/markdown; charset=utf-8'
+
+    # convert to html, if specified
+    if ($AsHtml) {
+        # if non-string value, convert to HTML, and write as HTML
+        if ((Get-PodeType $Value).Name -ine 'string') {
+            $mimeType = 'text/html; charset=utf-8'
+            $Value = ($Value | ConvertTo-Html)
+        }
+
+        # if ps-core, convert from markdown and write as HTML
+        elseif (Test-IsPSCore) {
+            $mimeType = 'text/html; charset=utf-8'
+            $Value = ($Value | ConvertFrom-Markdown).Html
+        }
+    }
+
+    # render the content
+    if ((Get-PodeType $Value).Name -ine 'string') {
+        return
+    }
+
+    Write-PodeValueToResponse -Value $Value -ContentType $mimeType
+}
+
 # include helper to import the content of a view into another view
 function Include
 {
@@ -581,7 +634,19 @@ function View
     }
 
     # run any engine logic and render it
-    html -Value (Get-PodeFileContentUsingViewEngine -Path $Path -Data $Data)
+    $engine = (Get-PodeViewEngineType -Path $Path)
+    $value = (Get-PodeFileContentUsingViewEngine -Path $Path -Data $Data)
+
+    switch ($engine.ToLowerInvariant())
+    {
+        'md' {
+            markdown $value -html
+        }
+
+        default {
+            html $value
+        }
+    }
 }
 
 function Close-PodeTcpConnection

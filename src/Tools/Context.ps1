@@ -200,6 +200,7 @@ function New-PodeContext
 
 function New-PodeRunspaceState
 {
+    # add the pode and utility powershell modules
     $state = [initialsessionstate]::CreateDefault()
     $state.ImportPSModule($PodeContext.Server.PodeModulePath)
 
