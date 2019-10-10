@@ -1,0 +1,7 @@
+{
+	"name": "PowerShell",
+	"dockerFile": "Dockerfile",
+	"extensions": [
+		"ms-vscode.powershell"
+	]
+}

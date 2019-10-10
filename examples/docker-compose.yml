@@ -7,3 +7,6 @@ services:
       - "8085:8085"
     container_name: pode-example
     restart: always
+    volumes:
+    # This lets you avoid setting up Git again in the container
+    - ~/.gitconfig:/root/.gitconfig

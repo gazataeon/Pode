@@ -5,27 +5,31 @@ Import-Module "$($path)/src/Pode.psm1" -Force -ErrorAction Stop
 # Import-Module Pode
 
 # create a server, and start listening on port 8086
-Server {
+Start-PodeServer {
 
-    listen *:8086 http
-
-    # can be hit by sending a POST request to "localhost:8086/api/test"
-    route 'post' '/api/test' {
-        param($session)
-        json @{ 'hello' = 'world'; }
-    }
+    Add-PodeEndpoint -Address * -Port 8086 -Protocol Http
 
     # can be hit by sending a GET request to "localhost:8086/api/test"
-    route 'get' '/api/test' {
-        param($session)
-        json @{ 'hello' = 'world'; }
+    Add-PodeRoute -Method Get -Path '/api/test' -ScriptBlock {
+        Write-PodeJsonResponse -Value @{ 'hello' = 'world'; }
+    }
+
+    # can be hit by sending a POST request to "localhost:8086/api/test"
+    Add-PodeRoute -Method Post -Path '/api/test' -ContentType 'application/json' -ScriptBlock {
+        param($e)
+        Write-PodeJsonResponse -Value @{ 'hello' = 'world'; 'name' = $e.Data['name']; }
     }
 
     # returns details for an example user
-    route 'get' '/api/users/:userId' {
-        param($session)
-        $user = Get-DummyUser -UserId $session.Parameters['userId']
-        json @{ 'user' = $user; }
+    Add-PodeRoute -Method Get -Path '/api/users/:userId' -ScriptBlock {
+        param($e)
+        Write-PodeJsonResponse -Value @{ 'user' = $e.Parameters['userId']; }
+    }
+
+    # returns details for an example user
+    Add-PodeRoute -Method Get -Path '/api/users/:userId/messages' -ScriptBlock {
+        param($e)
+        Write-PodeJsonResponse -Value @{ 'user' = $e.Parameters['userId']; }
     }
 
 }
